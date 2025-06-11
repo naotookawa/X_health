@@ -41,6 +41,12 @@
     max-width: 250px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     animation: fadeInUp 0.3s ease;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.result-popup:hover {
+    background: rgba(0, 0, 0, 0.95);
 }
 
 .result-popup::before {
@@ -55,6 +61,17 @@
 
 .result-content {
     line-height: 1.4;
+}
+
+.tweet-content {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #e1e5e9;
+    font-style: italic;
+    border-left: 3px solid #ff6b6b;
 }
 
 .score {

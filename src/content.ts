@@ -16,6 +16,7 @@ class TwitterHPMonitor {
   private processedTweets: Set<string> = new Set();
   private hpDisplay: HTMLElement | null = null;
   private resultPopup: HTMLElement | null = null;
+  private popupStack: HTMLElement[] = [];
   private isExtensionValid: boolean = true;
   private isGameOver: boolean = false;
 
@@ -256,7 +257,7 @@ class TwitterHPMonitor {
       this.updateHPDisplay();
       
       // 結果をポップアップで表示
-      this.showResult(score, reason, hpLoss);
+      this.showResult(score, reason, hpLoss, tweetText);
       
       // HPが0になった場合の処理（ゲームオーバー状態でない場合のみ）
       if (this.currentHP <= 0 && !this.isGameOver) {
@@ -265,25 +266,48 @@ class TwitterHPMonitor {
     }
   }
 
-  showResult(score: number, reason: string, hpLoss: number): void {
-    if (!this.resultPopup) return;
+  showResult(score: number, reason: string, hpLoss: number, tweetText: string): void {
+    if (!this.hpDisplay) return;
 
-    this.resultPopup.innerHTML = `
+    // ツイートテキストを適切な長さに制限
+    const truncatedTweet = tweetText.length > 100 ? 
+      tweetText.substring(0, 100) + '...' : 
+      tweetText;
+
+    // 新しいpopupを作成
+    const newPopup = document.createElement('div');
+    newPopup.className = 'result-popup';
+    newPopup.innerHTML = `
       <div class="result-content">
+        <div class="tweet-content">「${truncatedTweet}」</div>
         <div class="score">信頼性スコア: ${score}/5</div>
         <div class="hp-loss">HP -${hpLoss}</div>
         <div class="reason">${reason}</div>
       </div>
     `;
+
+    // スタック内の位置を計算して配置
+    this.positionPopupInStack(newPopup);
     
-    this.resultPopup.style.display = 'block';
+    // HP表示要素に追加
+    this.hpDisplay.appendChild(newPopup);
     
-    // 3秒後に非表示
-    setTimeout(() => {
-      if (this.resultPopup) {
-        this.resultPopup.style.display = 'none';
+    // スタックに追加
+    this.popupStack.push(newPopup);
+    
+    // クリックで閉じる機能を追加
+    newPopup.onclick = () => {
+      this.removePopupFromStack(newPopup);
+    };
+    
+    // 最大10個までに制限（古いものから削除）
+    if (this.popupStack.length > 10) {
+      const oldestPopup = this.popupStack.shift();
+      if (oldestPopup && oldestPopup.parentNode) {
+        oldestPopup.parentNode.removeChild(oldestPopup);
       }
-    }, 3000);
+      this.repositionAllPopups();
+    }
     
     // HP減少アニメーション
     if (this.hpDisplay) {
@@ -294,6 +318,36 @@ class TwitterHPMonitor {
         }
       }, 500);
     }
+  }
+
+  positionPopupInStack(popup: HTMLElement): void {
+    const stackIndex = this.popupStack.length;
+    const topOffset = 100 + (stackIndex * 10); // 最初のpopupから10pxずつ下にずらす
+    
+    popup.style.position = 'absolute';
+    popup.style.top = `${topOffset}%`;
+    popup.style.right = '0';
+    popup.style.marginTop = '10px';
+    popup.style.zIndex = (1000 + stackIndex).toString();
+  }
+
+  removePopupFromStack(popup: HTMLElement): void {
+    const index = this.popupStack.indexOf(popup);
+    if (index > -1) {
+      this.popupStack.splice(index, 1);
+      if (popup.parentNode) {
+        popup.parentNode.removeChild(popup);
+      }
+      this.repositionAllPopups();
+    }
+  }
+
+  repositionAllPopups(): void {
+    this.popupStack.forEach((popup, index) => {
+      const topOffset = 100 + (index * 10);
+      popup.style.top = `${topOffset}%`;
+      popup.style.zIndex = (1000 + index).toString();
+    });
   }
 
   showExtensionInvalidatedMessage(): void {
