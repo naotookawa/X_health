@@ -1,41 +1,34 @@
+"use strict";
 // Twitter HP Monitor - Background Script
-
 class BackgroundService {
     constructor() {
         this.setupMessageListener();
     }
-
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (request.action === 'analyzeTweet') {
                 this.analyzeTweetWithOpenAI(request.text)
                     .then(result => {
-                        sendResponse({ success: true, data: result });
-                    })
+                    sendResponse({ success: true, data: result });
+                })
                     .catch(error => {
-                        console.error('分析エラー:', error);
-                        sendResponse({ success: false, error: error.message });
-                    });
+                    console.error('分析エラー:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
                 return true; // 非同期レスポンスを示す
             }
+            return false;
         });
     }
-
     async getOpenAIKey() {
-        try {
-            const result = await chrome.storage.local.get(['openaiApiKey']);
-            return result.openaiApiKey;
-        } catch (error) {
+        const result = await chrome.storage.local.get(['openaiApiKey']);
+        if (!result.openaiApiKey) {
             throw new Error('OpenAI APIキーが設定されていません');
         }
+        return result.openaiApiKey;
     }
-
     async analyzeTweetWithOpenAI(tweetText) {
         const apiKey = await this.getOpenAIKey();
-        if (!apiKey) {
-            throw new Error('OpenAI APIキーが設定されていません');
-        }
-
         const prompt = `
 以下のツイート内容の信頼性を0-5のスケールで評価してください：
 - 0: 完全に健全で信頼できる情報
@@ -53,7 +46,6 @@ class BackgroundService {
   "reason": "[判定理由を1文で簡潔に]"
 }
 `;
-
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -73,61 +65,51 @@ class BackgroundService {
                     temperature: 0.3
                 })
             });
-
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
             }
-
             const data = await response.json();
-            const content = data.choices[0]?.message?.content;
-
+            const content = data.choices?.[0]?.message?.content;
             if (!content) {
                 throw new Error('APIからの応答が無効です');
             }
-
             // JSONレスポンスをパース
             try {
                 const result = JSON.parse(content);
-                
                 // 結果の検証
                 if (typeof result.score !== 'number' || result.score < 0 || result.score > 5) {
                     throw new Error('無効なスコア値');
                 }
-
                 if (typeof result.reason !== 'string' || result.reason.length === 0) {
                     throw new Error('無効な理由');
                 }
-
                 return {
                     score: Math.round(result.score), // 整数に丸める
                     reason: result.reason
                 };
-
-            } catch (parseError) {
+            }
+            catch (parseError) {
                 console.error('JSON Parse Error:', parseError);
                 console.error('Raw content:', content);
-                
                 // フォールバック: テキストから数値を抽出
                 const scoreMatch = content.match(/score["\s]*:\s*(\d+)/i);
                 const reasonMatch = content.match(/reason["\s]*:\s*["']([^"']+)["']/i);
-                
                 if (scoreMatch) {
                     return {
                         score: Math.min(5, Math.max(0, parseInt(scoreMatch[1]))),
                         reason: reasonMatch ? reasonMatch[1] : '分析完了'
                     };
                 }
-                
                 throw new Error('レスポンスの解析に失敗しました');
             }
-
-        } catch (error) {
+        }
+        catch (error) {
             console.error('OpenAI API Error:', error);
             throw error;
         }
     }
 }
-
 // バックグラウンドサービス初期化
 new BackgroundService();
+//# sourceMappingURL=background.js.map

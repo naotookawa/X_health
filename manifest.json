@@ -18,12 +18,12 @@
         "https://twitter.com/*",
         "https://x.com/*"
       ],
-      "js": ["content.js"],
+      "js": ["dist/content.js"],
       "css": ["styles.css"]
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "dist/background.js"
   },
   "action": {
     "default_popup": "popup.html",
