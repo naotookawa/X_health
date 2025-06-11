@@ -81,6 +81,12 @@ class PopupManager {
       this.saveApiKey();
     });
 
+    // APIキー削除
+    const deleteApiKeyBtn = document.getElementById('deleteApiKey');
+    deleteApiKeyBtn?.addEventListener('click', () => {
+      this.deleteApiKey();
+    });
+
     // HPリセット
     const resetHPBtn = document.getElementById('resetHP');
     resetHPBtn?.addEventListener('click', () => {
@@ -126,6 +132,46 @@ class PopupManager {
     } catch (error) {
       console.error('APIキー保存エラー:', error);
       this.showStatus(statusElement, '保存に失敗しました', 'error');
+    }
+  }
+
+  async deleteApiKey(): Promise<void> {
+    console.log('deleteApiKey called');
+    
+    const apiKeyElement = document.getElementById('apiKey') as HTMLInputElement;
+    const statusElement = document.getElementById('apiKeyStatus');
+    
+    console.log('Elements found:', { apiKeyElement, statusElement });
+    
+    if (!apiKeyElement || !statusElement) {
+      console.error('Elements not found!');
+      return;
+    }
+
+    // 確認ダイアログ（カスタム実装）
+    console.log('Showing custom confirm dialog');
+    const confirmed = await this.showCustomConfirm('APIキーを削除しますか？\n削除すると分析機能が使用できなくなります。');
+    
+    console.log('Confirm result:', confirmed);
+    
+    if (!confirmed) {
+      console.log('User cancelled deletion');
+      return;
+    }
+
+    try {
+      console.log('Attempting to delete API key');
+      // ストレージからAPIキーを削除
+      await chrome.storage.local.remove(['openaiApiKey']);
+      
+      // 入力フィールドもクリア
+      apiKeyElement.value = '';
+      
+      console.log('Showing success message');
+      this.showStatus(statusElement, 'APIキーが削除されました', 'success');
+    } catch (error) {
+      console.error('APIキー削除エラー:', error);
+      this.showStatus(statusElement, '削除に失敗しました', 'error');
     }
   }
 
@@ -196,9 +242,103 @@ class PopupManager {
       element.style.display = 'none';
     }, 3000);
   }
+
+  async showCustomConfirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      // オーバーレイを作成
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      `;
+
+      // ダイアログを作成
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 300px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      `;
+
+      dialog.innerHTML = `
+        <div style="margin-bottom: 20px; font-size: 16px; color: #333; line-height: 1.4;">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="confirmOk" style="
+            padding: 10px 20px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+          ">削除</button>
+          <button id="confirmCancel" style="
+            padding: 10px 20px;
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+          ">キャンセル</button>
+        </div>
+      `;
+
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      // ボタンイベント
+      const okBtn = dialog.querySelector('#confirmOk');
+      const cancelBtn = dialog.querySelector('#confirmCancel');
+
+      const cleanup = () => {
+        document.body.removeChild(overlay);
+      };
+
+      okBtn?.addEventListener('click', () => {
+        cleanup();
+        resolve(true);
+      });
+
+      cancelBtn?.addEventListener('click', () => {
+        cleanup();
+        resolve(false);
+      });
+
+      // オーバーレイクリックでキャンセル
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          cleanup();
+          resolve(false);
+        }
+      });
+    });
+  }
 }
 
 // 初期化
+console.log('Popup script loaded');
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded fired');
   new PopupManager();
 });
+
+// 念のため、すぐにも初期化を試行
+if (document.readyState === 'loading') {
+  console.log('Document is still loading, waiting for DOMContentLoaded');
+} else {
+  console.log('Document already loaded, initializing immediately');
+  new PopupManager();
+}

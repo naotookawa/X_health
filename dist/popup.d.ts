@@ -15,8 +15,10 @@ declare class PopupManager {
     updateHPDisplay(): void;
     setupEventListeners(): void;
     saveApiKey(): Promise<void>;
+    deleteApiKey(): Promise<void>;
     resetHP(): Promise<void>;
     testAnalysis(): Promise<void>;
     showStatus(element: HTMLElement, message: string, type: 'success' | 'error'): void;
+    showCustomConfirm(message: string): Promise<boolean>;
 }
 //# sourceMappingURL=popup.d.ts.map

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter HP Monitor</title>
+    <title>我々は詭弁を滅さんとす！</title>
     <style>
         body {
             width: 350px;
@@ -103,8 +103,14 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button:active {
+            transform: translateY(1px);
         }
         
         .button-primary {
@@ -114,7 +120,8 @@
         
         .button-primary:hover {
             background: #1a8cd8;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3);
         }
         
         .button-secondary {
@@ -124,15 +131,31 @@
         
         .button-secondary:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
         }
         
         .button-danger {
             background: #ff4757;
             color: white;
+            border: 2px solid transparent;
         }
         
         .button-danger:hover {
             background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+            border-color: #ff6b6b;
+            animation: dangerPulse 1.5s infinite;
+        }
+        
+        @keyframes dangerPulse {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 16px rgba(255, 71, 87, 0.6);
+            }
         }
         
         .status-message {
@@ -164,8 +187,8 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">❤️🛡️</div>
-        <div class="title">Twitter HP Monitor</div>
+        <!-- <div class="logo">❤️🛡️</div> -->
+        <div class="title">我々は詭弁を滅さんとす！</div>
         <div class="subtitle">情報リテラシー向上ツール</div>
     </div>
     
@@ -183,6 +206,7 @@
         </div>
         
         <button id="saveApiKey" class="button button-primary">API キーを保存</button>
+        <button id="deleteApiKey" class="button button-danger">API キーを削除</button>
         
         <div class="status-message" id="apiKeyStatus"></div>
     </div>
@@ -191,13 +215,14 @@
         <div class="section-title">⚡ アクション</div>
         
         <button id="resetHP" class="button button-secondary">HPをリセット (100に戻す)</button>
-        <button id="testAnalysis" class="button button-secondary">分析テスト実行</button>
+        <!-- <button id="testAnalysis" class="button button-secondary">分析テスト実行</button> -->
         
         <div class="status-message" id="actionStatus"></div>
     </div>
     
     <div class="footer">
-        v1.0 | Anthropic Claude 4 で開発
+        v1.3 | Anthropic Claude 4 で開発<br>
+        © 2025 東京大學詭弁論部
     </div>
     
     <script src="dist/popup.js"></script>

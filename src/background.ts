@@ -45,6 +45,12 @@ class BackgroundService {
             sendResponse({ success: false, error: error.message });
           });
         return true; // 非同期レスポンスを示す
+      } else if (request.action === 'openPopup') {
+        // 拡張機能のポップアップを開く
+        chrome.action.openPopup().catch(error => {
+          console.error('ポップアップ開けませんでした:', error);
+        });
+        return false;
       }
       return false;
     });
@@ -62,6 +68,7 @@ class BackgroundService {
     const apiKey = await this.getOpenAIKey();
     
     const prompt = `
+あなたは情報リテラシーの専門家です。
 以下のツイート内容の信頼性を0-5のスケールで評価してください。
 ただし、ユーモア、ジョーク、とんち、明らかな創作・フィクション、個人の感想や体験談は低評価しないでください。
 

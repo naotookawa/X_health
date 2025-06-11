@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Twitter HP Monitor",
-  "version": "1.0",
-  "description": "情報リテラシー向上のためのHP監視拡張機能",
+  "name": "我々は詭弁を滅さんとす！",
+  "version": "1.3",
+  "description": "Xでの情報リテラシー向上のための投稿監視と客観的解析の拡張機能",
   "permissions": [
     "storage",
     "activeTab"
@@ -27,6 +27,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Twitter HP Monitor"
+    "default_title": "我々は詭弁を滅さんとす！"
   }
 }

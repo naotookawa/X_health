@@ -31,6 +31,9 @@ class TwitterHPMonitor {
     // HP表示を作成
     this.createHPDisplay();
     
+    // 初回起動チェック
+    await this.checkFirstRun();
+    
     // 既存のツイートを処理
     this.processVisibleTweets();
     
@@ -58,6 +61,21 @@ class TwitterHPMonitor {
     }
   }
 
+  async checkFirstRun(): Promise<void> {
+    try {
+      const result = await chrome.storage.local.get(['firstRunCompleted', 'openaiApiKey']);
+      
+      // 初回起動またはAPIキー未設定の場合
+      if (!result.firstRunCompleted || !result.openaiApiKey) {
+        this.showWelcomePopup();
+      }
+    } catch (error) {
+      console.error('初回起動チェックエラー:', error);
+      // エラーの場合は安全のためウェルカム画面を表示
+      this.showWelcomePopup();
+    }
+  }
+
   createHPDisplay(): void {
     // HP表示コンテナ
     this.hpDisplay = document.createElement('div');
@@ -78,7 +96,40 @@ class TwitterHPMonitor {
     
     document.body.appendChild(this.hpDisplay);
     
+    // ハートクリックで拡張機能ポップアップを開く
+    this.setupHeartClickEvent();
+    
     this.updateHPDisplay();
+  }
+
+  setupHeartClickEvent(): void {
+    if (!this.hpDisplay) return;
+
+    const heartsContainer = this.hpDisplay.querySelector('.hearts-container') as HTMLElement;
+    if (!heartsContainer) return;
+
+    // 既存のイベントリスナーがあるかチェック
+    if (heartsContainer.dataset.clickHandlerAdded === 'true') {
+      return;
+    }
+
+    // ハートコンテナにクリックイベントを追加
+    heartsContainer.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // 拡張機能のポップアップを開く
+      chrome.runtime.sendMessage({ action: 'openPopup' }).catch(error => {
+        console.error('ポップアップを開けませんでした:', error);
+      });
+    });
+
+    // ホバー効果のためのカーソルスタイル追加
+    heartsContainer.style.cursor = 'pointer';
+    heartsContainer.title = 'クリックして設定画面を開く';
+    
+    // イベントハンドラー追加済みフラグを設定
+    heartsContainer.dataset.clickHandlerAdded = 'true';
   }
 
   updateHPDisplay(): void {
@@ -102,6 +153,9 @@ class TwitterHPMonitor {
     } else {
       this.hpDisplay.classList.remove('low-hp');
     }
+
+    // ハートクリックイベントを再設定（DOM更新後）
+    this.setupHeartClickEvent();
   }
 
   observeTwitter(): void {
@@ -280,7 +334,7 @@ class TwitterHPMonitor {
     newPopup.innerHTML = `
       <div class="result-content">
         <div class="tweet-content">「${truncatedTweet}」</div>
-        <div class="score">信頼性スコア: ${score}/5</div>
+        <div class="score">詭弁を見つけたり！！: Lv.${score}</div>
         <div class="hp-loss">HP -${hpLoss}</div>
         <div class="reason">${reason}</div>
       </div>
@@ -375,7 +429,7 @@ class TwitterHPMonitor {
     this.isGameOver = true;
     
     // 警告メッセージを表示
-    alert('⚠️ HPが0になりました！\n一旦Twitterから離れましょう！\n\n情報リテラシーを向上させて、より良いTwitterライフを送りましょう。');
+    alert('⚠️ HPが0になりました。\n一旦Xから離れたまえ！\n\n情報リテラシーを向上させて、\nより健全な情報を摂取しましょう。\n\n© 2025 東京大學詭弁論部');
     
     // OKを押した後にHPを100にリセット
     this.currentHP = 100;
@@ -386,6 +440,94 @@ class TwitterHPMonitor {
     this.isGameOver = false;
     
     console.log('ゲームオーバー処理が実行されました');
+  }
+
+  showWelcomePopup(): void {
+    // オーバーレイを作成
+    const overlay = document.createElement('div');
+    overlay.className = 'welcome-overlay';
+    
+    // ウェルカムpopupを作成
+    const welcomePopup = document.createElement('div');
+    welcomePopup.className = 'welcome-popup';
+    welcomePopup.innerHTML = `
+      <div class="welcome-content">
+        <div class="welcome-header">
+          <h2>🛡️ 我々は詭弁を滅さんとす！</h2>
+        </div>
+        <div class="welcome-body">
+          <p>情報リテラシー向上のためのChrome拡張機能です。</p>
+          <p>デマや有害な投稿を読むとHPが減少し、注意を促します。</p>
+          
+          <div class="setup-section">
+            <h3>📋 初期設定が必要です</h3>
+            <ol>
+              <li><strong>OpenAI APIキー</strong>の取得が必要です</li>
+              <li><a href="https://platform.openai.com/api-keys" target="_blank">OpenAI公式サイト</a> でアカウント作成</li>
+              <li>APIキーを生成してコピー</li>
+              <li>下のボタンから設定画面を開いてAPIキーを入力</li>
+            </ol>
+          </div>
+          
+          <div class="welcome-note">
+            <p><strong>注意:</strong> APIキーはあなたのブラウザにのみ保存され、外部に送信されません。</p>
+          </div>
+        </div>
+        <div class="welcome-actions">
+          <button class="btn-primary" id="openSettings">設定画面を開く</button>
+          <button class="btn-secondary" id="closeWelcome">後で設定する</button>
+        </div>
+        <div class="welcome-footer">
+          <p>© 2025 東京大學詭弁論部</p>
+        </div>
+      </div>
+    `;
+    
+    overlay.appendChild(welcomePopup);
+    document.body.appendChild(overlay);
+    
+    // ボタンイベントを設定
+    this.setupWelcomeEvents(overlay);
+  }
+
+  setupWelcomeEvents(overlay: HTMLElement): void {
+    const openSettingsBtn = overlay.querySelector('#openSettings');
+    const closeWelcomeBtn = overlay.querySelector('#closeWelcome');
+    
+    openSettingsBtn?.addEventListener('click', () => {
+      // 拡張機能の設定画面を開く
+      chrome.runtime.sendMessage({ action: 'openPopup' });
+      this.closeWelcomePopup(overlay);
+    });
+    
+    closeWelcomeBtn?.addEventListener('click', () => {
+      this.closeWelcomePopup(overlay);
+    });
+    
+    // オーバーレイクリックで閉じる
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        this.closeWelcomePopup(overlay);
+      }
+    });
+  }
+
+  async closeWelcomePopup(overlay: HTMLElement): Promise<void> {
+    // フェードアウトアニメーション
+    overlay.style.opacity = '0';
+    
+    setTimeout(() => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    }, 300);
+    
+    // 初回起動完了フラグを保存
+    try {
+      await chrome.storage.local.set({ firstRunCompleted: true });
+    } catch (error) {
+      console.error('初回起動フラグ保存エラー:', error);
+    }
   }
 }
 

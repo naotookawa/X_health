@@ -16,6 +16,15 @@
     gap: 2px;
     justify-content: center;
     margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.hearts-container:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
 }
 
 .heart {
@@ -43,6 +52,9 @@
     animation: fadeInUp 0.3s ease;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    /* アニメーションの継承を無効化 */
+    animation-fill-mode: forwards;
+    animation-iteration-count: 1;
 }
 
 .result-popup:hover {
@@ -108,13 +120,13 @@
     font-size: 11px;
 }
 
-/* HP低下時の警告スタイル */
-.hp-display.low-hp {
+/* HP低下時の警告スタイル - ハート部分のみ点滅 */
+.hp-display.low-hp .hearts-container {
     animation: pulse 1s infinite;
 }
 
-/* HPダメージアニメーション */
-.hp-display.hp-damage {
+/* HPダメージアニメーション - ハート部分のみシェイク */
+.hp-display.hp-damage .hearts-container {
     animation: shake 0.5s ease-in-out;
 }
 
@@ -145,6 +157,157 @@
     75% { transform: translateX(5px); }
 }
 
+/* ウェルカムpopup スタイル */
+.welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10001;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.welcome-popup {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: welcomeSlideIn 0.4s ease;
+}
+
+.welcome-content {
+    padding: 24px;
+}
+
+.welcome-header h2 {
+    margin: 0 0 16px 0;
+    color: #1da1f2;
+    font-size: 24px;
+    text-align: center;
+}
+
+.welcome-body p {
+    margin: 8px 0;
+    color: #333;
+    line-height: 1.5;
+}
+
+.setup-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.setup-section h3 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 18px;
+}
+
+.setup-section ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.setup-section li {
+    margin: 6px 0;
+    color: #495057;
+}
+
+.setup-section a {
+    color: #1da1f2;
+    text-decoration: none;
+}
+
+.setup-section a:hover {
+    text-decoration: underline;
+}
+
+.welcome-note {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 16px 0;
+}
+
+.welcome-note p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: #1da1f2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1991db;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+}
+
+.welcome-footer {
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #dee2e6;
+}
+
+.welcome-footer p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+@keyframes welcomeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .hp-display {
@@ -159,6 +322,19 @@
     .result-popup {
         max-width: 200px;
         font-size: 11px;
+    }
+    
+    .welcome-popup {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+    
+    .welcome-content {
+        padding: 16px;
+    }
+    
+    .welcome-actions {
+        flex-direction: column;
     }
 }
 
