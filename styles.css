@@ -1,0 +1,130 @@
+/* Twitter HP Monitor Styles */
+
+.hp-display {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: all 0.3s ease;
+}
+
+
+.hearts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.heart {
+    font-size: 48px;
+    transition: all 0.2s ease;
+}
+
+.heart:hover {
+    transform: scale(1.1);
+}
+
+
+.result-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    max-width: 250px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: fadeInUp 0.3s ease;
+}
+
+.result-popup::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 15px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba(0, 0, 0, 0.9);
+}
+
+.result-content {
+    line-height: 1.4;
+}
+
+.score {
+    font-weight: bold;
+    color: #ff6b6b;
+    margin-bottom: 4px;
+}
+
+.hp-loss {
+    font-weight: bold;
+    color: #ff4757;
+    margin-bottom: 6px;
+}
+
+.reason {
+    color: #f1f2f6;
+    font-size: 11px;
+}
+
+/* HP低下時の警告スタイル */
+.hp-display.low-hp {
+    animation: pulse 1s infinite;
+}
+
+/* HPダメージアニメーション */
+.hp-display.hp-damage {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* アニメーション定義 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .hp-display {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .heart {
+        font-size: 14px;
+    }
+    
+    .result-popup {
+        max-width: 200px;
+        font-size: 11px;
+    }
+}
+
