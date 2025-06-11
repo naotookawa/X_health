@@ -16,6 +16,8 @@ class TwitterHPMonitor {
   private processedTweets: Set<string> = new Set();
   private hpDisplay: HTMLElement | null = null;
   private resultPopup: HTMLElement | null = null;
+  private isExtensionValid: boolean = true;
+  private isGameOver: boolean = false;
 
   constructor() {
     this.init();
@@ -215,6 +217,11 @@ class TwitterHPMonitor {
   }
 
   async analyzeTweet(tweetText: string, tweetElement: Element): Promise<void> {
+    // 拡張機能が無効化されている場合は処理をスキップ
+    if (!this.isExtensionValid) {
+      return;
+    }
+
     try {
       // バックグラウンドスクリプトに分析を依頼
       const response = await chrome.runtime.sendMessage({
@@ -226,6 +233,14 @@ class TwitterHPMonitor {
         await this.handleAnalysisResult(response.data, tweetText);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Extension context invalidated') || 
+          errorMessage.includes('Receiving end does not exist')) {
+        console.warn('拡張機能のコンテキストが無効化されました。ページを再読み込みしてください。');
+        this.isExtensionValid = false;
+        this.showExtensionInvalidatedMessage();
+        return;
+      }
       console.error('ツイート分析エラー:', error);
     }
   }
@@ -242,6 +257,11 @@ class TwitterHPMonitor {
       
       // 結果をポップアップで表示
       this.showResult(score, reason, hpLoss);
+      
+      // HPが0になった場合の処理（ゲームオーバー状態でない場合のみ）
+      if (this.currentHP <= 0 && !this.isGameOver) {
+        this.handleGameOver();
+      }
     }
   }
 
@@ -274,6 +294,44 @@ class TwitterHPMonitor {
         }
       }, 500);
     }
+  }
+
+  showExtensionInvalidatedMessage(): void {
+    if (!this.resultPopup) return;
+
+    this.resultPopup.innerHTML = `
+      <div class="result-content extension-invalidated">
+        <div class="warning">⚠️ 拡張機能のコンテキストが無効化されました</div>
+        <div class="instruction">ページを再読み込みしてください</div>
+      </div>
+    `;
+    
+    this.resultPopup.style.display = 'block';
+    
+    // 10秒後に非表示
+    setTimeout(() => {
+      if (this.resultPopup) {
+        this.resultPopup.style.display = 'none';
+      }
+    }, 10000);
+  }
+
+  async handleGameOver(): Promise<void> {
+    // ゲームオーバー状態に設定
+    this.isGameOver = true;
+    
+    // 警告メッセージを表示
+    alert('⚠️ HPが0になりました！\n一旦Twitterから離れましょう！\n\n情報リテラシーを向上させて、より良いTwitterライフを送りましょう。');
+    
+    // OKを押した後にHPを100にリセット
+    this.currentHP = 100;
+    await this.saveHP();
+    this.updateHPDisplay();
+    
+    // ゲームオーバー状態を解除
+    this.isGameOver = false;
+    
+    console.log('ゲームオーバー処理が実行されました');
   }
 }
 

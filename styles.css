@@ -74,6 +74,23 @@
     font-size: 11px;
 }
 
+/* 拡張機能無効化警告スタイル */
+.extension-invalidated {
+    background: rgba(255, 107, 107, 0.9) !important;
+}
+
+.extension-invalidated .warning {
+    font-weight: bold;
+    color: white;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.extension-invalidated .instruction {
+    color: #ffe4e4;
+    font-size: 11px;
+}
+
 /* HP低下時の警告スタイル */
 .hp-display.low-hp {
     animation: pulse 1s infinite;
